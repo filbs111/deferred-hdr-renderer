@@ -21,7 +21,13 @@
       <canvas id="bottom-canvas" width="100%" height="100%" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
     </div>
 
-    <input type="checkbox" id="hdrtoggle" name="hdrtoggle"/>
-    <label for="hdrtoggle">HDR</label>
+    <p>Select Rendering:</p>
+    <input type="radio" id="drawforwardlinear" name="rendermoderadio"/>
+    <label for="drawforwardlinear">Forward Linear</label>
+    <input type="radio" id="drawforwardhdr" name="rendermoderadio" checked/>
+    <label for="drawforwardhdr">Forward HDR</label>
+    <input type="radio" id="drawnormals" name="rendermoderadio"/>
+    <label for="drawnormals">Normals</label>
+
 </body>
 </html>

@@ -290,21 +290,31 @@ function drawScene(frameTime){
     var vFov = 90;   //degrees!!!
     mat4.perspective(vFov, gl.viewportWidth/ gl.viewportHeight, camParams.near, camParams.far, pMatrix); 
 
-    var hdrToggle = document.getElementById("hdrtoggle").checked;
+    var drawLinear = document.getElementById("drawforwardlinear").checked;
+    var drawHdr = document.getElementById("drawforwardhdr").checked;
+    var drawNormals = document.getElementById("drawnormals").checked;
 
-    var activeProg = hdrToggle? shaderPrograms.flatHdr : shaderPrograms.flat;
+    var activeProg = drawLinear ? shaderPrograms.flat:
+                     drawHdr ? shaderPrograms.flatHdr:
+                     drawNormals ? shaderPrograms.normals:
+                     null;
+    
+    if (activeProg == null){
+        console.log("oops!");
+        return;
+    }
+
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
 
     var boxRotation = frameTime / 1000;
 
-
     for (var testCube of testCubes){
 
-        if (hdrToggle){
+        if (drawHdr){
             gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
-                //TODO include lightMultiplier ? 
-        }else{
+        }
+        if (drawLinear){
             gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col);
         }
 
