@@ -10,7 +10,13 @@ var mMatrix = mat4.create();
 var pMatrix = mat4.create();
 
 
-var testCubePosition = [0,-2,-6];    //[0,0,2] with vFov 90 degrees makes cube fill view
+var testCubes = [
+    {pos:[0,-2,-6], col:[.99,0.5,0.25]},    //[0,0,2] with vFov 90 degrees makes cube fill view
+    {pos:[-3,-2,-6], col:[.1,0.8,0.4]},
+    {pos:[3,-2,-6], col:[.8,0.3,0.8]},
+    {pos:[-6,-2,-6], col:[.1,0.1,0.1]},
+    {pos:[6,-2,-6], col:[.9,.9,.9]},
+];
 
 var mouseInfo = {
 	x:0,
@@ -284,15 +290,28 @@ function drawScene(frameTime){
     var vFov = 90;   //degrees!!!
     mat4.perspective(vFov, gl.viewportWidth/ gl.viewportHeight, camParams.near, camParams.far, pMatrix); 
 
-    var activeProg = shaderPrograms.flat;
+    var hdrToggle = document.getElementById("hdrtoggle").checked;
+
+    var activeProg = hdrToggle? shaderPrograms.flatHdr : shaderPrograms.flat;
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
 
-    setupDrawMatrixForObjectAtPosition(testCubePosition);
+    var boxRotation = frameTime / 1000;
 
-    gl.uniform3fv(activeProg.uniforms.uFlatColor, [0.25,0.25,0.25]);
 
-    drawObjectFromBuffers(cubeBuffers, activeProg);
+    for (var testCube of testCubes){
+
+        if (hdrToggle){
+            gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
+                //TODO include lightMultiplier ? 
+        }else{
+            gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col);
+        }
+
+        setupDrawMatrixForObjectAtPosition(testCube.pos);
+        mat4.rotateZ(mMatrix, boxRotation); //roll
+        drawObjectFromBuffers(cubeBuffers, activeProg);
+    }
 }
 
 function setupDrawMatrixForObjectAtPosition(objPos){

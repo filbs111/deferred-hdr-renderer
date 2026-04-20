@@ -114,6 +114,7 @@ function initShaders(shaderProgs){
 	var initShaderTimeStart = performance.now();
 	var shaderProgNoVariationsList = {
 		flat:["flat-vs", "flat-fs"],
+		flatHdr:["flat-vs", "flat-fs", [], ["HDR"]],
 	};
 
 	console.log("loading shaders...");
