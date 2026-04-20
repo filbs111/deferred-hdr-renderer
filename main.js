@@ -293,10 +293,14 @@ function drawScene(frameTime){
     var drawLinear = document.getElementById("drawforwardlinear").checked;
     var drawHdr = document.getElementById("drawforwardhdr").checked;
     var drawNormals = document.getElementById("drawnormals").checked;
+    var drawAlbedo = document.getElementById("drawalbedo").checked;
+    var drawVecFromLight = document.getElementById("drawvecfromlight").checked;
 
     var activeProg = drawLinear ? shaderPrograms.flat:
                      drawHdr ? shaderPrograms.flatHdr:
                      drawNormals ? shaderPrograms.normals:
+                     drawAlbedo ? shaderPrograms.albedo:
+                     drawVecFromLight ? shaderPrograms.vecFromLight:
                      null;
     
     if (activeProg == null){
@@ -314,7 +318,7 @@ function drawScene(frameTime){
         if (drawHdr){
             gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
         }
-        if (drawLinear){
+        if (drawLinear || drawAlbedo){
             gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col);
         }
 

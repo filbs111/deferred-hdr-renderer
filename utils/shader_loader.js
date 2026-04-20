@@ -116,6 +116,8 @@ function initShaders(shaderProgs){
 		flat:["flat-vs", "flat-fs"],
 		flatHdr:["flat-vs", "flat-fs", [], ["HDR"]],
 		normals:["flat-vs", "normals-fs"],
+		albedo:["flat-vs", "albedo-fs"],
+		vecFromLight:["flat-vs", "vecfromlight-fs"],
 	};
 
 	console.log("loading shaders...");
