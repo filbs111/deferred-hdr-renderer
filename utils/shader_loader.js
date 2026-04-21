@@ -118,6 +118,7 @@ function initShaders(shaderProgs){
 		normals:["flat-vs", "normals-fs"],
 		albedo:["flat-vs", "albedo-fs"],
 		vecFromLight:["flat-vs", "vecfromlight-fs"],
+		fullscreenTextured:["fullscreen-vs", "fullscreen-fs"],
 	};
 
 	console.log("loading shaders...");

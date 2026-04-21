@@ -1,6 +1,7 @@
 
 var shaderPrograms={};
 var cubeBuffers={};
+var quadBuffers={};
 
 var cameraMat = mat4.identity();
 
@@ -8,6 +9,8 @@ var cameraMat = mat4.identity();
 var mvMatrix = mat4.create();
 var mMatrix = mat4.create();
 var pMatrix = mat4.create();
+
+var intermediateView = {};
 
 
 var testCubes = [
@@ -104,6 +107,7 @@ function init(){
 
     initGL();
     initShaders(shaderPrograms);initShaders=null;
+   	initTextureFramebuffer(intermediateView);
     initTextures();
 
     initBuffers();
@@ -127,6 +131,7 @@ function initTextures(){
 
 function initBuffers(){
     loadBufferData(cubeBuffers, levelCubeData);
+   	loadBufferData(quadBuffers, quadData);
 }
 
 
@@ -285,7 +290,6 @@ function drawScene(frameTime){
     gl.disable(gl.BLEND);
 	gl.enable(gl.DEPTH_TEST);
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var vFov = 90;   //degrees!!!
     mat4.perspective(vFov, gl.viewportWidth/ gl.viewportHeight, camParams.near, camParams.far, pMatrix); 
@@ -295,18 +299,61 @@ function drawScene(frameTime){
     var drawNormals = document.getElementById("drawnormals").checked;
     var drawAlbedo = document.getElementById("drawalbedo").checked;
     var drawVecFromLight = document.getElementById("drawvecfromlight").checked;
+    var drawAlbedoViaIntermediate = document.getElementById("drawalbedoviaintermediate").checked;
 
-    var activeProg = drawLinear ? shaderPrograms.flat:
-                     drawHdr ? shaderPrograms.flatHdr:
-                     drawNormals ? shaderPrograms.normals:
-                     drawAlbedo ? shaderPrograms.albedo:
-                     drawVecFromLight ? shaderPrograms.vecFromLight:
-                     null;
-    
-    if (activeProg == null){
-        console.log("oops!");
-        return;
+    if (drawAlbedoViaIntermediate){
+        //draw albedo to intermediate buffer, then map that to the screen.
+
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, intermediateView.framebuffer);
+
+        //TODO just match dimensions of output
+		var intermediate_view_width = 4096;
+        var intermediate_view_height = 2048;
+
+		gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
+		setRttSize( intermediateView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
+
+        drawWorldScene(shaderPrograms.albedo, frameTime, false);    //TODO draw HDR or not?
+        
+
+        //draw to screen
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);        
+        drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView);
+
+
+        //TODO option to draw depth map, convert from depth map to position, reproduce drawVecFromLight
+
+
+        //TODO render normals and albedo to separate intermediate views
+    }else{
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+
+        //draw to screen
+        var shaderProg = drawLinear ? shaderPrograms.flat:
+            drawHdr ? shaderPrograms.flatHdr:
+            drawNormals ? shaderPrograms.normals:
+            drawAlbedo ? shaderPrograms.albedo:
+            drawVecFromLight ? shaderPrograms.vecFromLight:
+            null;
+
+        if (shaderProg == null){
+            console.log("oops!");
+            return;
+        }
+
+        drawWorldScene(shaderProg, frameTime, drawHdr);
     }
+
+    
+}
+
+function drawWorldScene(activeProg, frameTime, drawHdr){
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
@@ -314,18 +361,28 @@ function drawScene(frameTime){
     var boxRotation = frameTime / 1000;
 
     for (var testCube of testCubes){
-
-        if (drawHdr){
-            gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
-        }
-        if (drawLinear || drawAlbedo){
-            gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col);
+        if (activeProg.uniforms.uFlatColor){    
+            if (drawHdr){
+                gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
+            }else{
+                gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col);
+            }
         }
 
         setupDrawMatrixForObjectAtPosition(testCube.pos);
         mat4.rotateZ(mMatrix, boxRotation); //roll
         drawObjectFromBuffers(cubeBuffers, activeProg);
     }
+}
+
+function drawFullscreenQuad(activeProg, intermediateView){
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
+
+    gl.useProgram(activeProg);
+    enableDisableAttributes(activeProg);
+    bind2dTextureIfRequired(intermediateView.texture);
+
+    drawObjectFromBuffers(quadBuffers, activeProg);
 }
 
 function setupDrawMatrixForObjectAtPosition(objPos){
