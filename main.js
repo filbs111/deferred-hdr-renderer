@@ -14,9 +14,9 @@ var intermediateView = {};
 
 
 var testCubes = [
-    {pos:[0,-2,-6], col:[.99,0.5,0.25]},    //[0,0,2] with vFov 90 degrees makes cube fill view
-    {pos:[-3,-2,-6], col:[.1,0.8,0.4]},
-    {pos:[3,-2,-6], col:[.8,0.3,0.8]},
+    {pos:[0,-2,-6], col:[.99,0.4,0.15]},    //[0,0,2] with vFov 90 degrees makes cube fill view
+    {pos:[-3,-2,-6], col:[.1,0.8,0.2]},
+    {pos:[3,-2,-6], col:[.8,0.2,0.8]},
     {pos:[-6,-2,-6], col:[.1,0.1,0.1]},
     {pos:[6,-2,-6], col:[.9,.9,.9]},
 ];
@@ -301,8 +301,9 @@ function drawScene(frameTime){
     var drawAlbedo = document.getElementById("drawalbedo").checked;
     var drawVecFromLight = document.getElementById("drawvecfromlight").checked;
     var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
+    var drawViaIntermediateHdr = document.getElementById("drawviaintermediatehdr").checked;
 
-    if (drawViaIntermediate){
+    if (drawViaIntermediate || drawViaIntermediateHdr){
         //draw albedo to intermediate buffer, with depth map.
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, intermediateView.framebuffer);
@@ -319,13 +320,17 @@ function drawScene(frameTime){
             gl.COLOR_ATTACHMENT1
         ]);
 
-        drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);    //TODO draw HDR or not?
+        drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);
         
         //draw to screen
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView);
 
+        if (drawViaIntermediateHdr){
+            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, intermediateView);
+        }else{
+            drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView);
+        }
         //currently drawing reconstructed position relative to light
 
         //TODO render normals, calculate lighting
@@ -369,11 +374,13 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
         rotMultiplier++;
 
         if (activeProg.uniforms.uFlatColor){    
-            if (drawHdr){
-                gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
-            }else{
+            //if (drawHdr){
+            //    gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));
+            //           //untonemapping - use with tonemapping to match linear colour under lighting strength 1
+            //           //NOTE this can create values >1 (unphysical for albedo) and result in clamped value in intermediate albedo render, so different result in forward vs via intermediate.
+            //}else{
                 gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col);
-            }
+            //}
         }
 
         setupDrawMatrixForObjectAtPosition(testCube.pos);
