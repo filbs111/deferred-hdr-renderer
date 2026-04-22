@@ -4,7 +4,7 @@ var cubeBuffers={};
 var quadBuffers={};
 
 var cameraMat = mat4.identity();
-
+mat4.rotateY(cameraMat, 0.1);
 
 var mvMatrix = mat4.create();
 var mMatrix = mat4.create();
@@ -285,7 +285,7 @@ function drawScene(frameTime){
 	requestAnimationFrame(drawScene);
     
 
-    gl.clearColor(0,1,1,1); //cyan
+    gl.clearColor(0,.5,.5,1); //cyan
 
     gl.disable(gl.BLEND);
 	gl.enable(gl.DEPTH_TEST);
@@ -299,11 +299,10 @@ function drawScene(frameTime){
     var drawNormals = document.getElementById("drawnormals").checked;
     var drawAlbedo = document.getElementById("drawalbedo").checked;
     var drawVecFromLight = document.getElementById("drawvecfromlight").checked;
-    var drawAlbedoViaIntermediate = document.getElementById("drawalbedoviaintermediate").checked;
+    var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
 
-    if (drawAlbedoViaIntermediate){
-        //draw albedo to intermediate buffer, then map that to the screen.
-
+    if (drawViaIntermediate){
+        //draw albedo to intermediate buffer, with depth map.
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, intermediateView.framebuffer);
 
@@ -316,17 +315,14 @@ function drawScene(frameTime){
 
         drawWorldScene(shaderPrograms.albedo, frameTime, false);    //TODO draw HDR or not?
         
-
         //draw to screen
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);        
         drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView);
 
+        //currently drawing reconstructed position relative to light
 
-        //TODO option to draw depth map, convert from depth map to position, reproduce drawVecFromLight
-
-
-        //TODO render normals and albedo to separate intermediate views
+        //TODO render normals, calculate lighting
     }else{
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -360,7 +356,12 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
 
     var boxRotation = frameTime / 1000;
 
+    var rotMultiplier =0;
+
     for (var testCube of testCubes){
+
+        rotMultiplier++;
+
         if (activeProg.uniforms.uFlatColor){    
             if (drawHdr){
                 gl.uniform3fv(activeProg.uniforms.uFlatColor, testCube.col.map(x=>-Math.log(1-x)));   //untonemapping - use with tonemapping to match linear colour under lighting strength 1
@@ -370,7 +371,7 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
         }
 
         setupDrawMatrixForObjectAtPosition(testCube.pos);
-        mat4.rotateZ(mMatrix, boxRotation); //roll
+        mat4.rotateZ(mMatrix, rotMultiplier*boxRotation); //roll
         drawObjectFromBuffers(cubeBuffers, activeProg);
     }
 }
@@ -381,6 +382,18 @@ function drawFullscreenQuad(activeProg, intermediateView){
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
     bind2dTextureIfRequired(intermediateView.texture);
+    bind2dTextureIfRequired(intermediateView.depthTexture,gl.TEXTURE1);
+
+
+    gl.uniform1i(activeProg.uniforms.uSamplerDepthmap, 1);
+
+    var invertedMatrix = mat4.create(pMatrix);
+    mat4.multiply(invertedMatrix, cameraMat);
+        
+    mat4.inverse(invertedMatrix);
+    
+    gl.uniformMatrix4fv(activeProg.uniforms.uInvMat, false, invertedMatrix);
+
 
     drawObjectFromBuffers(quadBuffers, activeProg);
 }
