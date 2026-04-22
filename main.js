@@ -285,7 +285,8 @@ function drawScene(frameTime){
 	requestAnimationFrame(drawScene);
     
 
-    gl.clearColor(0,.5,.5,1); //cyan
+    //gl.clearColor(0,.5,.5,1); //cyan
+    gl.clearColor(0,0,0,1); //black
 
     gl.disable(gl.BLEND);
 	gl.enable(gl.DEPTH_TEST);
@@ -312,12 +313,17 @@ function drawScene(frameTime){
 
 		gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
 		setRttSize( intermediateView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
+        
+        gl.drawBuffers([
+            gl.COLOR_ATTACHMENT0,
+            gl.COLOR_ATTACHMENT1
+        ]);
 
-        drawWorldScene(shaderPrograms.albedo, frameTime, false);    //TODO draw HDR or not?
+        drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);    //TODO draw HDR or not?
         
         //draw to screen
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);        
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView);
 
         //currently drawing reconstructed position relative to light
@@ -382,10 +388,11 @@ function drawFullscreenQuad(activeProg, intermediateView){
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
     bind2dTextureIfRequired(intermediateView.texture);
-    bind2dTextureIfRequired(intermediateView.depthTexture,gl.TEXTURE1);
+    bind2dTextureIfRequired(intermediateView.texture1, gl.TEXTURE1);
+    bind2dTextureIfRequired(intermediateView.depthTexture,gl.TEXTURE2);
 
-
-    gl.uniform1i(activeProg.uniforms.uSamplerDepthmap, 1);
+    gl.uniform1i(activeProg.uniforms.uSampler1, 1);
+    gl.uniform1i(activeProg.uniforms.uSamplerDepthmap, 2);
 
     var invertedMatrix = mat4.create(pMatrix);
     mat4.multiply(invertedMatrix, cameraMat);
