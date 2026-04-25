@@ -27,7 +27,7 @@ var testCubes = [
 
 var pointLights = [
     {pos:[0.,-2.,-4.7], col:[.5,.5,.5]},
-    {pos:[3,-2,-4.7], col:[1,.1,.1]}
+    {pos:[3,-2,-3.7], col:[10,.1,.1]}
 ];
 
 var mouseInfo = {
@@ -330,20 +330,21 @@ function drawScene(frameTime){
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, accumulationView.framebuffer);
         gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
-        setRttSize( accumulationView, intermediate_view_width, intermediate_view_height, true );	//todo stop setting this repeatedly
+        setRttSize( accumulationView, intermediate_view_width, intermediate_view_height, true);	//todo stop setting this repeatedly
 
         gl.blendFunc(gl.ONE, gl.ONE);
         gl.enable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
-        drawFullscreenQuad(shaderPrograms.fullscreenDirectionalOnly, intermediateView);
+        drawFullscreenQuad(shaderPrograms.fullscreenDirectionalOnly, [intermediateView.texture1], intermediateView.depthTexture);
         
-        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, intermediateView, activeProg => {
+        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, [intermediateView.texture1], intermediateView.depthTexture , activeProg => {
             gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLights[0].pos);
-            gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[0].col)});
+            gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[0].col)
+        });
 
-        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, intermediateView, activeProg => {
+        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, [intermediateView.texture1], intermediateView.depthTexture, activeProg => {
             gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLights[1].pos);
             gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[1].col);
         });
@@ -353,9 +354,9 @@ function drawScene(frameTime){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
 
         if (drawAccumulatedHdr){
-            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, accumulationView);
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, [accumulationView.texture, intermediateView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
         }else{
-            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, accumulationView);
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, [accumulationView.texture, intermediateView.texture], accumulationView.depthTexture );   //NOTE depth texture here is pointless!
         }
         gl.disable(gl.BLEND);   //back to default. 
         gl.enable(gl.DEPTH_TEST);
@@ -372,9 +373,9 @@ function drawScene(frameTime){
 
 
         if (drawViaIntermediateHdr){
-            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, intermediateView, setLights);
+            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights);
         }else{
-            drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView, setLights);
+            drawFullscreenQuad(shaderPrograms.fullscreenTextured, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights);
         }
         //currently drawing reconstructed position relative to light
 
@@ -452,15 +453,15 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
     }
 }
 
-function drawFullscreenQuad(activeProg, intermediateView, setThingsCallback){
+function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallback){
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
-    bind2dTextureIfRequired(intermediateView.texture);
-    bind2dTextureIfRequired(intermediateView.depthTexture,gl.TEXTURE2);
+    bind2dTextureIfRequired(colorTextures[0]);
+    bind2dTextureIfRequired(depthTex,gl.TEXTURE2);
     gl.uniform1i(activeProg.uniforms.uSamplerDepthmap, 2);
 
-    if (intermediateView.texture1){
-        bind2dTextureIfRequired(intermediateView.texture1, gl.TEXTURE1);
+    if (colorTextures.length>1){
+        bind2dTextureIfRequired(colorTextures[1], gl.TEXTURE1);
         gl.uniform1i(activeProg.uniforms.uSampler1, 1);
     }
 

@@ -4,7 +4,6 @@ precision mediump float;
 in vec2 vTexCoords;
 
 uniform sampler2D uSampler;
-uniform sampler2D uSampler1;
 uniform sampler2D uSamplerDepthmap;
 
 uniform mat4 uInvMat;
@@ -14,10 +13,8 @@ out vec4 fragColor;
 void main(void) {
 
     vec2 texCoordCorrected = vec2(0.5)+vec2(0.5)*vTexCoords;    //regular 2d texture has centre at 0.5
-
-    vec3 albedo = texture(uSampler, texCoordCorrected).xyz;
     
-    vec3 normalTex = texture(uSampler1, texCoordCorrected).xyz;
+    vec3 normalTex = texture(uSampler, texCoordCorrected).xyz;
     vec3 normal = normalTex*2. - 1.;
 
 
@@ -30,9 +27,7 @@ void main(void) {
 
     regularLight = regularLight*.5;
 
-
-    vec3 totalLight = albedo * regularLight;
-
+    vec3 totalLight = regularLight;
 
 #ifdef HDR
     vec3 hdrified = 1. - exp(-totalLight);
