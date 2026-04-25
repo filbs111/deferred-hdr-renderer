@@ -319,8 +319,9 @@ function drawScene(frameTime){
     var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
     var drawViaIntermediateHdr = document.getElementById("drawviaintermediatehdr").checked;
     var drawAccumulatedLinear = document.getElementById("drawaccumulatedlinear").checked;
+    var drawAccumulatedHdr = document.getElementById("drawaccumulatedhdr").checked;
 
-    if (drawAccumulatedLinear){
+    if (drawAccumulatedLinear || drawAccumulatedHdr){
         //??
         //draw intermediate views - use below instead? then
         // draw from intermediate into accumulation (or should draw to final screen?)
@@ -329,7 +330,7 @@ function drawScene(frameTime){
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, accumulationView.framebuffer);
         gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
-        setRttSize( accumulationView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
+        setRttSize( accumulationView, intermediate_view_width, intermediate_view_height, true );	//todo stop setting this repeatedly
 
         gl.blendFunc(gl.ONE, gl.ONE);
         gl.enable(gl.BLEND);
@@ -350,8 +351,12 @@ function drawScene(frameTime){
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
-        drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, accumulationView);
 
+        if (drawAccumulatedHdr){
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, accumulationView);
+        }else{
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, accumulationView);
+        }
         gl.disable(gl.BLEND);   //back to default. 
         gl.enable(gl.DEPTH_TEST);
 

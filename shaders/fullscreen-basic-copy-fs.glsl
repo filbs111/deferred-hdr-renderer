@@ -13,7 +13,14 @@ void main(void) {
 
     vec2 texCoordCorrected = vec2(0.5)+vec2(0.5)*vTexCoords;    //regular 2d texture has centre at 0.5
 
-    vec3 albedo = texture(uSampler, texCoordCorrected).xyz;
-    
-    fragColor = vec4(pow(albedo, vec3(0.455)),1.0);
+    vec3 sampled = texture(uSampler, texCoordCorrected).xyz;
+
+#ifdef HDR
+    vec3 hdrified = 1. - exp(-sampled);
+    fragColor = vec4(pow(hdrified, vec3(0.455)),1.0);
+#else
+    fragColor = vec4(pow(sampled, vec3(0.455)),1.0);
+#endif
+
+
 }

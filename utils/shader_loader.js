@@ -120,6 +120,7 @@ function initShaders(shaderProgs){
 		albedoAndNormals:["flat-vs", "albedo-and-normals-fs"],
 		worldPos:["flat-vs", "worldpos-fs"],
   		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs"],
+		fullscreenBasicCopyHdr:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["HDR"]],
 		fullscreenTextured:["fullscreen-vs", "fullscreen-fs"],
 		fullscreenTexturedHdr:["fullscreen-vs", "fullscreen-fs", [], ["HDR"]],
 		fullscreenDirectionalOnly:["fullscreen-vs", "fullscreen-directional-only-fs"],

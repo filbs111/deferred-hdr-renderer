@@ -3,7 +3,7 @@
 var rttView={};
 var optionalPenultimateView={};
 
-function setRttSize(view, width, height){	
+function setRttSize(view, width, height, isFloat){
 	if (view.sizeX == width && view.sizeY == height){return;}	// avoid setting again if same numbers ( has speed impact)
 																	//todo check for memory leak
 	view.sizeX = width;
@@ -13,17 +13,32 @@ function setRttSize(view, width, height){
 	view.framebuffer.height = height;	
 	
 	gl.bindTexture(gl.TEXTURE_2D, view.texture);
-	texImage2DWithLogs("after binding view texture", 
-		gl.TEXTURE_2D, 0,
-		gl.RGB10_A2, view.framebuffer.width, view.framebuffer.height, 0, 
-		gl.RGBA, gl.UNSIGNED_INT_2_10_10_10_REV, null);
+
+	if (isFloat){
+		texImage2DWithLogs("after binding view texture", 
+			gl.TEXTURE_2D, 0,
+			gl.R11F_G11F_B10F, view.framebuffer.width, view.framebuffer.height, 0, 
+			gl.RGB, gl.FLOAT, null);
+		}else{
+		texImage2DWithLogs("after binding view texture", 
+			gl.TEXTURE_2D, 0,
+			gl.RGB10_A2, view.framebuffer.width, view.framebuffer.height, 0, 
+			gl.RGBA, gl.UNSIGNED_INT_2_10_10_10_REV, null);
+	}
 
 	if (view.hasExtraView){
 		gl.bindTexture(gl.TEXTURE_2D, view.texture1);
+		if (isFloat){
+		texImage2DWithLogs("after binding view texture 1", 
+			gl.TEXTURE_2D, 0,
+			gl.R11F_G11F_B10F, view.framebuffer.width, view.framebuffer.height, 0, 
+			gl.RGB, gl.FLOAT, null);
+		}else{
 		texImage2DWithLogs("after binding view texture 1", 
 			gl.TEXTURE_2D, 0,
 			gl.RGB10_A2, view.framebuffer.width, view.framebuffer.height, 0, 
 			gl.RGBA, gl.UNSIGNED_INT_2_10_10_10_REV, null);
+		}
 	}
 
 	gl.bindTexture(gl.TEXTURE_2D, view.depthTexture);

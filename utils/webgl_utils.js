@@ -9,6 +9,13 @@ function initGL(){
 	try {
 		gl = canvas.getContext("webgl2",{antialias:false});
 		resizecanvas();
+
+		const ext = gl.getExtension("EXT_color_buffer_float");
+		if (!ext) {
+			console.error("EXT_color_buffer_float not supported");
+			return;
+		}
+
 	} catch (e) {
 	}
 	if (!gl) {
