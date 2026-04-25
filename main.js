@@ -11,10 +11,14 @@ var mMatrix = mat4.create();
 var pMatrix = mat4.create();
 
 var intermediateView = {};
+var accumulationView = {};
 
+//TODO just match dimensions of output
+var intermediate_view_width = 4096;
+var intermediate_view_height = 2048;
 
 var testCubes = [
-    {pos:[0,-2,-6], col:[.99,0.4,0.15]},    //[0,0,2] with vFov 90 degrees makes cube fill view
+    {pos:[0,-2,-6], col:[.99,0.2,0.05]},    //[0,0,2] with vFov 90 degrees makes cube fill view
     {pos:[-3,-2,-6], col:[.1,0.8,0.2]},
     {pos:[3,-2,-6], col:[.8,0.2,0.8]},
     {pos:[-6,-2,-6], col:[.1,0.1,0.1]},
@@ -107,7 +111,8 @@ function init(){
 
     initGL();
     initShaders(shaderPrograms);initShaders=null;
-   	initTextureFramebuffer(intermediateView);
+   	initTextureFramebuffer(intermediateView, true, gl.CLAMP_TO_EDGE, true);
+    initTextureFramebuffer(accumulationView, true, gl.CLAMP_TO_EDGE, false);
     initTextures();
 
     initBuffers();
@@ -302,30 +307,46 @@ function drawScene(frameTime){
     var drawVecFromLight = document.getElementById("drawvecfromlight").checked;
     var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
     var drawViaIntermediateHdr = document.getElementById("drawviaintermediatehdr").checked;
+    var drawAccumulatedLinear = document.getElementById("drawaccumulatedlinear").checked;
 
-    if (drawViaIntermediate || drawViaIntermediateHdr){
-        //draw albedo to intermediate buffer, with depth map.
+    if (drawAccumulatedLinear){
+        //??
+        //draw intermediate views - use below instead? then
+        // draw from intermediate into accumulation (or should draw to final screen?)
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, intermediateView.framebuffer);
+        drawIntermediateView(frameTime);
 
-        //TODO just match dimensions of output
-		var intermediate_view_width = 4096;
-        var intermediate_view_height = 2048;
 
-		gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
-		setRttSize( intermediateView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
+        gl.bindFramebuffer(gl.FRAMEBUFFER, accumulationView.framebuffer);
+        gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
+        setRttSize( accumulationView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
+
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.enable(gl.BLEND);
+        gl.disable(gl.DEPTH_TEST);
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
+        drawFullscreenQuad(shaderPrograms.fullscreenDirectionalOnly, intermediateView);
+        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, intermediateView);
         
-        gl.drawBuffers([
-            gl.COLOR_ATTACHMENT0,
-            gl.COLOR_ATTACHMENT1
-        ]);
 
-        drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
+        drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, accumulationView);
+
+        gl.disable(gl.BLEND);   //back to default. 
+        gl.enable(gl.DEPTH_TEST);
+
+    } else if (drawViaIntermediate || drawViaIntermediateHdr){
+
+        drawIntermediateView(frameTime);
         
         //draw to screen
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
         if (drawViaIntermediateHdr){
             drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, intermediateView);
         }else{
@@ -354,8 +375,22 @@ function drawScene(frameTime){
 
         drawWorldScene(shaderProg, frameTime, drawHdr);
     }
+}
 
+function drawIntermediateView(frameTime){
+    //draw albedo to intermediate buffer, with depth map.
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, intermediateView.framebuffer);
+
+    gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
+    setRttSize( intermediateView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
     
+    gl.drawBuffers([
+        gl.COLOR_ATTACHMENT0,
+        gl.COLOR_ATTACHMENT1
+    ]);
+
+    drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);
 }
 
 function drawWorldScene(activeProg, frameTime, drawHdr){
@@ -390,17 +425,17 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
 }
 
 function drawFullscreenQuad(activeProg, intermediateView){
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
-
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
     bind2dTextureIfRequired(intermediateView.texture);
-    bind2dTextureIfRequired(intermediateView.texture1, gl.TEXTURE1);
     bind2dTextureIfRequired(intermediateView.depthTexture,gl.TEXTURE2);
-
-    gl.uniform1i(activeProg.uniforms.uSampler1, 1);
     gl.uniform1i(activeProg.uniforms.uSamplerDepthmap, 2);
 
+    if (intermediateView.texture1){
+        bind2dTextureIfRequired(intermediateView.texture1, gl.TEXTURE1);
+        gl.uniform1i(activeProg.uniforms.uSampler1, 1);
+    }
+    
     var invertedMatrix = mat4.create(pMatrix);
     mat4.multiply(invertedMatrix, cameraMat);
         

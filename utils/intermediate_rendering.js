@@ -18,11 +18,13 @@ function setRttSize(view, width, height){
 		gl.RGB10_A2, view.framebuffer.width, view.framebuffer.height, 0, 
 		gl.RGBA, gl.UNSIGNED_INT_2_10_10_10_REV, null);
 
-	gl.bindTexture(gl.TEXTURE_2D, view.texture1);
-	texImage2DWithLogs("after binding view texture 1", 
-		gl.TEXTURE_2D, 0,
-		gl.RGB10_A2, view.framebuffer.width, view.framebuffer.height, 0, 
-		gl.RGBA, gl.UNSIGNED_INT_2_10_10_10_REV, null);
+	if (view.hasExtraView){
+		gl.bindTexture(gl.TEXTURE_2D, view.texture1);
+		texImage2DWithLogs("after binding view texture 1", 
+			gl.TEXTURE_2D, 0,
+			gl.RGB10_A2, view.framebuffer.width, view.framebuffer.height, 0, 
+			gl.RGBA, gl.UNSIGNED_INT_2_10_10_10_REV, null);
+	}
 
 	gl.bindTexture(gl.TEXTURE_2D, view.depthTexture);
 	texImage2DWithLogs("after binding depth texture",
@@ -40,7 +42,9 @@ function setRttSize(view, width, height){
 //	gl.bindFramebuffer(gl.FRAMEBUFFER, view.framebuffer);
 	
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, view.texture, 0);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, view.texture1, 0);	//MRT - add a second texture
+	if (view.hasExtraView){
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, view.texture1, 0);	//MRT - add a second texture
+	}
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, view.depthTexture, 0);
 	//gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 	
@@ -48,7 +52,9 @@ function setRttSize(view, width, height){
 //	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
-function initTextureFramebuffer(view, useNearestFiltering, outsideRangeBehaviour) {
+function initTextureFramebuffer(view, useNearestFiltering, outsideRangeBehaviour, hasExtraView) {
+	view.hasExtraView = hasExtraView;
+
 	var filterType = useNearestFiltering ? gl.NEAREST : gl.LINEAR;
 	view.framebuffer = gl.createFramebuffer();
 
@@ -66,12 +72,14 @@ function initTextureFramebuffer(view, useNearestFiltering, outsideRangeBehaviour
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filterType);
 	//gl.generateMipmap(gl.TEXTURE_2D);
 
-	view.texture1 = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, view.texture1);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, outsideRangeBehaviour);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, outsideRangeBehaviour);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filterType);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filterType);
+	if (hasExtraView){
+		view.texture1 = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, view.texture1);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, outsideRangeBehaviour);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, outsideRangeBehaviour);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filterType);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filterType);
+	}
 
 	view.depthTexture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, view.depthTexture);

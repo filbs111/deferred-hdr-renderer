@@ -119,8 +119,11 @@ function initShaders(shaderProgs){
 		albedo:["flat-vs", "albedo-fs"],
 		albedoAndNormals:["flat-vs", "albedo-and-normals-fs"],
 		vecFromLight:["flat-vs", "vecfromlight-fs"],
+  		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs"],
 		fullscreenTextured:["fullscreen-vs", "fullscreen-fs"],
 		fullscreenTexturedHdr:["fullscreen-vs", "fullscreen-fs", [], ["HDR"]],
+		fullscreenDirectionalOnly:["fullscreen-vs", "fullscreen-directional-only-fs"],
+		fullscreenPointOnly:["fullscreen-vs", "fullscreen-point-only-fs"],
 	};
 
 	console.log("loading shaders...");
