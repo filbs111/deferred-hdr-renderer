@@ -2,6 +2,7 @@
 var shaderPrograms={};
 var cubeBuffers={};
 var quadBuffers={};
+var lucyBuffers={};
 
 var cameraMat = mat4.identity();
 mat4.rotateY(cameraMat, 0.1);
@@ -148,6 +149,7 @@ function initTextures(){
 function initBuffers(){
     loadBufferData(cubeBuffers, levelCubeData);
    	loadBufferData(quadBuffers, quadData);
+    loadBuffersFromObj5File(lucyBuffers, "./data/lucy-withvertcolor.obj5", loadBufferData, 6);
 }
 
 
@@ -451,6 +453,14 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
         mat4.rotateZ(mMatrix, rotMultiplier*boxRotation); //roll
         drawObjectFromBuffers(cubeBuffers, activeProg);
     }
+
+    //TODO use vertex colours on this obj
+    if (lucyBuffers.isLoaded){
+        setupDrawMatrixForObjectAtPosition([150,0,-100]);
+        mat4.rotateY(mMatrix, 1.2);
+        drawObjectFromBuffers(lucyBuffers, activeProg);
+    }
+
 }
 
 function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallback){
