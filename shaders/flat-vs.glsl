@@ -7,9 +7,8 @@ uniform mat4 uMMatrix;
 uniform mat4 uPMatrix;
 
 //TODO put into normal frame with tangent vec etc? 
-out vec3 fromPointLight;
+out vec3 worldPosXYZ;
 out vec3 normalCopy;
-
 
 void main(void) {
 
@@ -22,6 +21,5 @@ void main(void) {
     vec4 transformedNormal = (uMMatrix * vec4(aVertexNormal, 0.0));
     
     normalCopy = transformedNormal.xyz;
-    vec3 light1Pos = vec3(0.,-2.,-4.7);
-    fromPointLight = transformedPosition.xyz - light1Pos;
+    worldPosXYZ = transformedPosition.xyz;
 }

@@ -25,6 +25,11 @@ var testCubes = [
     {pos:[6,-2,-6], col:[.9,.9,.9]},
 ];
 
+var pointLights = [
+    {pos:[0.,-2.,-4.7], col:[.5,.5,.5]},
+    {pos:[3,-2,-4.7], col:[1,.1,.1]}
+];
+
 var mouseInfo = {
 	x:0,
 	y:0,
@@ -33,6 +38,12 @@ var mouseInfo = {
 
 var pointerLocked=false;
 
+function setLights(activeProg){
+    gl.uniform3fv(activeProg.uniforms.uPointLight1Pos, pointLights[0].pos);
+    gl.uniform3fv(activeProg.uniforms.uPointLight1Color, pointLights[0].col);
+    gl.uniform3fv(activeProg.uniforms.uPointLight2Pos, pointLights[1].pos);
+    gl.uniform3fv(activeProg.uniforms.uPointLight2Color, pointLights[1].col);
+};
 
 function init(){
 
@@ -304,7 +315,7 @@ function drawScene(frameTime){
     var drawHdr = document.getElementById("drawforwardhdr").checked;
     var drawNormals = document.getElementById("drawnormals").checked;
     var drawAlbedo = document.getElementById("drawalbedo").checked;
-    var drawVecFromLight = document.getElementById("drawvecfromlight").checked;
+    var drawWorldPos = document.getElementById("drawworldpos").checked;
     var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
     var drawViaIntermediateHdr = document.getElementById("drawviaintermediatehdr").checked;
     var drawAccumulatedLinear = document.getElementById("drawaccumulatedlinear").checked;
@@ -316,7 +327,6 @@ function drawScene(frameTime){
 
         drawIntermediateView(frameTime);
 
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, accumulationView.framebuffer);
         gl.viewport( 0,0, intermediate_view_width, intermediate_view_height );
         setRttSize( accumulationView, intermediate_view_width, intermediate_view_height );	//todo stop setting this repeatedly
@@ -327,8 +337,15 @@ function drawScene(frameTime){
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
         drawFullscreenQuad(shaderPrograms.fullscreenDirectionalOnly, intermediateView);
-        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, intermediateView);
         
+        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, intermediateView, activeProg => {
+            gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLights[0].pos);
+            gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[0].col)});
+
+        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, intermediateView, activeProg => {
+            gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLights[1].pos);
+            gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[1].col);
+        });
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -347,10 +364,12 @@ function drawScene(frameTime){
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
+
+
         if (drawViaIntermediateHdr){
-            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, intermediateView);
+            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, intermediateView, setLights);
         }else{
-            drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView);
+            drawFullscreenQuad(shaderPrograms.fullscreenTextured, intermediateView, setLights);
         }
         //currently drawing reconstructed position relative to light
 
@@ -365,12 +384,16 @@ function drawScene(frameTime){
             drawHdr ? shaderPrograms.flatHdr:
             drawNormals ? shaderPrograms.normals:
             drawAlbedo ? shaderPrograms.albedo:
-            drawVecFromLight ? shaderPrograms.vecFromLight:
+            drawWorldPos ? shaderPrograms.worldPos:
             null;
 
         if (shaderProg == null){
             console.log("oops!");
             return;
+        }
+
+        if (drawLinear || drawHdr){
+            setLights(shaderProg);
         }
 
         drawWorldScene(shaderProg, frameTime, drawHdr);
@@ -424,7 +447,7 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
     }
 }
 
-function drawFullscreenQuad(activeProg, intermediateView){
+function drawFullscreenQuad(activeProg, intermediateView, setThingsCallback){
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
     bind2dTextureIfRequired(intermediateView.texture);
@@ -435,7 +458,11 @@ function drawFullscreenQuad(activeProg, intermediateView){
         bind2dTextureIfRequired(intermediateView.texture1, gl.TEXTURE1);
         gl.uniform1i(activeProg.uniforms.uSampler1, 1);
     }
-    
+
+    if (setThingsCallback){
+        setThingsCallback(activeProg);
+    }
+
     var invertedMatrix = mat4.create(pMatrix);
     mat4.multiply(invertedMatrix, cameraMat);
         

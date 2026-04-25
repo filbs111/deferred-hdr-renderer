@@ -3,7 +3,7 @@ precision mediump float;
 
 out vec4 fragColor;
 
-in vec3 fromPointLight; //unused
+in vec3 worldPosXYZ; //unused
 in vec3 normalCopy;
 
 void main(void) {

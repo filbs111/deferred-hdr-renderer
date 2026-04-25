@@ -3,7 +3,7 @@ precision mediump float;
 
 out vec4 fragColor;
 
-in vec3 fromPointLight;
+in vec3 worldPosXYZ;
 in vec3 normalCopy;
 
 uniform vec3 uFlatColor;

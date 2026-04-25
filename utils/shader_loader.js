@@ -118,7 +118,7 @@ function initShaders(shaderProgs){
 		normals:["flat-vs", "normals-fs"],
 		albedo:["flat-vs", "albedo-fs"],
 		albedoAndNormals:["flat-vs", "albedo-and-normals-fs"],
-		vecFromLight:["flat-vs", "vecfromlight-fs"],
+		worldPos:["flat-vs", "worldpos-fs"],
   		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs"],
 		fullscreenTextured:["fullscreen-vs", "fullscreen-fs"],
 		fullscreenTexturedHdr:["fullscreen-vs", "fullscreen-fs", [], ["HDR"]],

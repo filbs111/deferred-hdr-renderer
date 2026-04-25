@@ -4,7 +4,7 @@ precision mediump float;
 layout (location = 0) out vec4 out_albedo;
 layout (location = 1) out vec4 out_normals;
 
-in vec3 fromPointLight; //unused
+in vec3 worldPosXYZ; //unused
 in vec3 normalCopy;
 
 uniform vec3 uFlatColor;
