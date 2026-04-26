@@ -324,6 +324,7 @@ function drawScene(frameTime){
     var drawAccumulatedHdr = document.getElementById("drawaccumulatedhdr").checked;
     var drawAccumulatedWithBlur = document.getElementById("drawaccumulatedwithblur").checked;
     var drawAccumulatedHdrWithBlur = document.getElementById("drawaccumulatedhdrwithblur").checked;
+        //NOTE blurs currently don't look good, but if have realistically bright sun/ emissive object and specular highlights, might naturally obtain bloom from simple blur
 
     if (drawAccumulatedLinear || drawAccumulatedHdr || drawAccumulatedWithBlur || drawAccumulatedHdrWithBlur){
         //??
