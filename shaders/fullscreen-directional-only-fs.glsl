@@ -15,7 +15,7 @@ void main(void) {
     vec2 texCoordCorrected = vec2(0.5)+vec2(0.5)*vTexCoords;    //regular 2d texture has centre at 0.5
     
     vec3 normalTex = texture(uSampler, texCoordCorrected).xyz;
-    vec3 normal = normalTex*2. - 1.;
+    vec3 normal = normalize(normalTex*2. - 1.);
 
 
     float light = 0.5+0.5*dot(normalize(normal), vec3(0.,1.,0.));

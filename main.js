@@ -28,7 +28,7 @@ var testCubes = [
 
 var pointLights = [
     {pos:[0.,-2.,-4.7], col:[.5,.5,.5]},
-    {pos:[3,-2,-3.7], col:[10,.1,.1]}
+    {pos:[3,-2,-3.7], col:[5,2,1]}
 ];
 
 var mouseInfo = {
@@ -437,12 +437,16 @@ function drawIntermediateView(frameTime){
     drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);
 }
 
-function drawWorldScene(activeProg, frameTime, drawHdr){
+function drawWorldScene(activeProg, frameTime){
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
+
+    if (activeProg.uniforms.uNormalScale){
+        gl.uniform3fv(activeProg.uniforms.uNormalScale, [1,1,1]);
+    }
 
     var boxRotation = frameTime / 1000;
 
@@ -474,6 +478,18 @@ function drawWorldScene(activeProg, frameTime, drawHdr){
         drawObjectFromBuffers(lucyBuffers, activeProg);
     }
 
+    if (activeProg.uniforms.uNormalScale){
+        gl.uniform3fv(activeProg.uniforms.uNormalScale, [-1,-1,-1]);
+    }
+    gl.uniform3fv(activeProg.uniforms.uFlatColor, [1,1,1]); //NOTE albedo layer is currently capped to 1 so can't just put light colour/radius here currently.
+
+    //draw objects around lights. Could draw by emmissive shader, but AFAIK will get ~same result by drawing an inverted albedo 1 object around the light.
+    // (though impact of lights other than light in question on these lights will be wrong)
+    for (var light of pointLights){
+        setupDrawMatrixForObjectAtPosition(light.pos);
+        mat4.scale(mMatrix, [1,1,1].map(xx=>xx*0.02));
+        drawObjectFromBuffers(cubeBuffers, activeProg);
+    }
 }
 
 function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallback){

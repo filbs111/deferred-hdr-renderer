@@ -5,6 +5,7 @@ in vec3 aVertexNormal;
 uniform mat4 uVMatrix;
 uniform mat4 uMMatrix;
 uniform mat4 uPMatrix;
+uniform vec3 uNormalScale;
 
 //TODO put into normal frame with tangent vec etc? 
 out vec3 worldPosXYZ;
@@ -20,6 +21,6 @@ void main(void) {
     // NOTE normalizing vector maybe is wrong for non-uniformly scaled objects. TODO fix, or just use unscaled objects.
     vec4 transformedNormal = (uMMatrix * vec4(aVertexNormal, 0.0));
     
-    normalCopy = transformedNormal.xyz;
+    normalCopy = uNormalScale*transformedNormal.xyz;
     worldPosXYZ = transformedPosition.xyz;
 }

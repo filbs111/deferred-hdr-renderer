@@ -29,7 +29,7 @@ void main(void) {
     vec3 albedo = texture(uSampler, texCoordCorrected).xyz;
 
     vec3 normalTex = texture(uSampler1, texCoordCorrected).xyz;
-    vec3 normal = normalTex*2. - 1.;
+    vec3 normal = normalize(normalTex*2. - 1.);
 
     float depthVal = texture(uSamplerDepthmap, texCoordCorrected).r;
 

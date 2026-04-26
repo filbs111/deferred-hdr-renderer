@@ -20,7 +20,9 @@ float calculatePointLighting(vec3 fromPointLight, vec3 normal){
 }
 
 void main(void) {
-    float light = 0.5+0.5*dot(normalize(normalCopy), vec3(0.,1.,0.));
+    vec3 normal = normalize(normalCopy);
+
+    float light = 0.5+0.5*dot(normal, vec3(0.,1.,0.));
     vec3 vLight = vec3(light);
 
     float lightMultiplier = 1.;
@@ -29,8 +31,8 @@ void main(void) {
 
     regularLight = regularLight*.5;
 
-    vec3 pointLightContrib1 = uPointLight1Color* calculatePointLighting(worldPosXYZ - uPointLight1Pos, normalCopy);
-    vec3 pointLightContrib2 = uPointLight2Color* calculatePointLighting(worldPosXYZ - uPointLight2Pos, normalCopy);
+    vec3 pointLightContrib1 = uPointLight1Color* calculatePointLighting(worldPosXYZ - uPointLight1Pos, normal);
+    vec3 pointLightContrib2 = uPointLight2Color* calculatePointLighting(worldPosXYZ - uPointLight2Pos, normal);
 
     vec3 totalLight = uFlatColor * (regularLight + pointLightContrib1 + pointLightContrib2);
 
