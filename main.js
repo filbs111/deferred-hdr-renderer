@@ -124,7 +124,7 @@ function init(){
     initGL();
     initShaders(shaderPrograms);initShaders=null;
    	initTextureFramebuffer(intermediateView, true, gl.CLAMP_TO_EDGE, true);
-    initTextureFramebuffer(accumulationView, true, gl.CLAMP_TO_EDGE, false);
+    initTextureFramebuffer(accumulationView, false, gl.CLAMP_TO_EDGE, false);
     initTextures();
 
     initBuffers();
@@ -328,9 +328,12 @@ function drawScene(frameTime){
     var drawAccumulatedHdrWithBlur = document.getElementById("drawaccumulatedhdrwithblur").checked;
         //NOTE blurs currently don't look good, but if have realistically bright sun/ emissive object and specular highlights, might naturally obtain bloom from simple blur
 
+    var drawAccumulatedWithFxaa = document.getElementById("drawaccumulatedwithfxaa").checked;
+    var drawAccumulatedHdrWithFxaa = document.getElementById("drawaccumulatedhdrwithfxaa").checked;
+
     var exposure = parseFloat(document.getElementById("exposure").value);
 
-    if (drawAccumulatedLinear || drawAccumulatedHdr || drawAccumulatedWithBlur || drawAccumulatedHdrWithBlur){
+    if (drawAccumulatedLinear || drawAccumulatedHdr || drawAccumulatedWithBlur || drawAccumulatedHdrWithBlur || drawAccumulatedWithFxaa || drawAccumulatedHdrWithFxaa){
         //??
         //draw intermediate views - use below instead? then
         // draw from intermediate into accumulation (or should draw to final screen?)
@@ -368,7 +371,11 @@ function drawScene(frameTime){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
         gl.disable(gl.BLEND);   //back to default.
 
-        if (drawAccumulatedHdrWithBlur){
+        if (drawAccumulatedHdrWithFxaa){
+            drawFullscreenQuad(shaderPrograms.fullscreenFxaaHdr, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
+        }else if (drawAccumulatedWithFxaa){
+            drawFullscreenQuad(shaderPrograms.fullscreenFxaa, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
+        }else if (drawAccumulatedHdrWithBlur){
             drawFullscreenQuad(shaderPrograms.fullscreenWithBlurHdr, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
         } else if (drawAccumulatedWithBlur){
             drawFullscreenQuad(shaderPrograms.fullscreenWithBlur, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
