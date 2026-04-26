@@ -328,6 +328,8 @@ function drawScene(frameTime){
     var drawAccumulatedHdrWithBlur = document.getElementById("drawaccumulatedhdrwithblur").checked;
         //NOTE blurs currently don't look good, but if have realistically bright sun/ emissive object and specular highlights, might naturally obtain bloom from simple blur
 
+    var exposure = parseFloat(document.getElementById("exposure").value);
+
     if (drawAccumulatedLinear || drawAccumulatedHdr || drawAccumulatedWithBlur || drawAccumulatedHdrWithBlur){
         //??
         //draw intermediate views - use below instead? then
@@ -359,22 +361,21 @@ function drawScene(frameTime){
         //multiply accumulated light by albedo
         gl.blendFunc(gl.DST_COLOR, gl.ZERO);
         //gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
-        drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyNoGamma, [intermediateView.texture], intermediateView.depthTexture );    //NOTE depth texture here is pointless!
+        drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyNoGamma, [intermediateView.texture], intermediateView.depthTexture);    //NOTE depth texture here is pointless!
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
-        gl.disable(gl.BLEND);   //back to default. 
-
+        gl.disable(gl.BLEND);   //back to default.
 
         if (drawAccumulatedHdrWithBlur){
-            drawFullscreenQuad(shaderPrograms.fullscreenWithBlurHdr, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
+            drawFullscreenQuad(shaderPrograms.fullscreenWithBlurHdr, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
         } else if (drawAccumulatedWithBlur){
-            drawFullscreenQuad(shaderPrograms.fullscreenWithBlur, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
+            drawFullscreenQuad(shaderPrograms.fullscreenWithBlur, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
         }else if (drawAccumulatedHdr){
-            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, [accumulationView.texture], accumulationView.depthTexture, null, exposure);  //NOTE depth texture here is pointless!
         }else{
-            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, [accumulationView.texture], accumulationView.depthTexture );   //NOTE depth texture here is pointless!
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, [accumulationView.texture], accumulationView.depthTexture, null, exposure);   //NOTE depth texture here is pointless!
         }
         gl.enable(gl.DEPTH_TEST);
 
@@ -390,9 +391,9 @@ function drawScene(frameTime){
 
 
         if (drawViaIntermediateHdr){
-            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights);
+            drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights, exposure);
         }else{
-            drawFullscreenQuad(shaderPrograms.fullscreenTextured, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights);
+            drawFullscreenQuad(shaderPrograms.fullscreenTextured, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights, exposure);
         }
         //currently drawing reconstructed position relative to light
 
@@ -494,7 +495,7 @@ function drawWorldScene(activeProg, frameTime){
     }
 }
 
-function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallback){
+function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallback, exposure){
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
     bind2dTextureIfRequired(colorTextures[0]);
@@ -512,6 +513,11 @@ function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallba
 
     if (activeProg.uniforms.uInvSize){
         gl.uniform2f(activeProg.uniforms.uInvSize, 1/intermediate_view_width, 1/intermediate_view_height);
+    }
+
+    //NOTE exposure only applies to some rendering options
+    if (activeProg.uniforms.uExposure){
+        gl.uniform1f(activeProg.uniforms.uExposure, exposure ?? 1);
     }
 
     var invertedMatrix = mat4.create(pMatrix);

@@ -8,6 +8,7 @@ uniform sampler2D uSampler1;
 uniform sampler2D uSamplerDepthmap;
 
 uniform mat4 uInvMat;
+uniform float uExposure;
 
 uniform vec3 uPointLight1Pos;
 uniform vec3 uPointLight1Color;
@@ -50,7 +51,7 @@ void main(void) {
     vec3 pointLightContrib1 = uPointLight1Color* calculatePointLighting(worldPosXYZ - uPointLight1Pos, normal);
     vec3 pointLightContrib2 = uPointLight2Color* calculatePointLighting(worldPosXYZ - uPointLight2Pos, normal);
 
-    vec3 totalLight = albedo * (regularLight + pointLightContrib1 + pointLightContrib2);
+    vec3 totalLight = uExposure * albedo * (regularLight + pointLightContrib1 + pointLightContrib2);
 
 #ifdef HDR
     vec3 hdrified = 1. - exp(-totalLight);

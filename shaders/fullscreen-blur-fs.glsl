@@ -7,6 +7,7 @@ uniform sampler2D uSampler;
 
 uniform mat4 uInvMat;
 uniform vec2 uInvSize;
+uniform float uExposure;
 
 out vec4 fragColor;
 
@@ -14,7 +15,6 @@ void main(void) {
 
     vec2 texCoordCorrected = vec2(0.5)+vec2(0.5)*vTexCoords;    //regular 2d texture has centre at 0.5
 
-    float exposure = 1.;
     float blurSize = .6;
 
     //average many samples.
@@ -29,7 +29,7 @@ void main(void) {
             acccumulated4vec+=vec4(sampled, 1.)*weighting;
         }
     }
-    vec3 acccumulated = exposure*acccumulated4vec.xyz/acccumulated4vec.w;
+    vec3 acccumulated = uExposure*acccumulated4vec.xyz/acccumulated4vec.w;
 
 #ifdef HDR
     vec3 preGamma = 1. - exp(-acccumulated);
