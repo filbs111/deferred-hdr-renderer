@@ -28,7 +28,7 @@ var testCubes = [
 
 var pointLights = [
     {pos:[0.,-2.,-4.7], col:[.5,.5,.5]},
-    {pos:[3,-2,-3.7], col:[5,2,1]}
+    {pos:[3,-2,-3.7], col:[.05,.05, 5]}
 ];
 
 var mouseInfo = {
@@ -302,6 +302,8 @@ var camParams = {
 function drawScene(frameTime){
 	requestAnimationFrame(drawScene);
     
+    intermediate_view_width = gl.viewportWidth;
+    intermediate_view_height = gl.viewportHeight;
 
     //gl.clearColor(0,.5,.5,1); //cyan
     gl.clearColor(0,0,0,1); //black
@@ -506,6 +508,10 @@ function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallba
 
     if (setThingsCallback){
         setThingsCallback(activeProg);
+    }
+
+    if (activeProg.uniforms.uInvSize){
+        gl.uniform2f(activeProg.uniforms.uInvSize, 1/intermediate_view_width, 1/intermediate_view_height);
     }
 
     var invertedMatrix = mat4.create(pMatrix);
