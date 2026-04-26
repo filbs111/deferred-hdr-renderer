@@ -122,6 +122,8 @@ function initShaders(shaderProgs){
   		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["APPLY_GAMMA_CORRECTION"]],
 		fullscreenBasicCopyHdr:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["HDR","APPLY_GAMMA_CORRECTION"]],
 		fullscreenBasicCopyNoGamma:["fullscreen-vs", "fullscreen-basic-copy-fs"],
+  		fullscreenWithBlur:["fullscreen-vs", "fullscreen-blur-fs", [], ["APPLY_GAMMA_CORRECTION"]],
+		fullscreenWithBlurHdr:["fullscreen-vs", "fullscreen-blur-fs", [], ["HDR","APPLY_GAMMA_CORRECTION"]],
 		fullscreenTextured:["fullscreen-vs", "fullscreen-fs"],
 		fullscreenTexturedHdr:["fullscreen-vs", "fullscreen-fs", [], ["HDR"]],
 		fullscreenDirectionalOnly:["fullscreen-vs", "fullscreen-directional-only-fs"],

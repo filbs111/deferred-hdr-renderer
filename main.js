@@ -322,8 +322,10 @@ function drawScene(frameTime){
     var drawViaIntermediateHdr = document.getElementById("drawviaintermediatehdr").checked;
     var drawAccumulatedLinear = document.getElementById("drawaccumulatedlinear").checked;
     var drawAccumulatedHdr = document.getElementById("drawaccumulatedhdr").checked;
+    var drawAccumulatedWithBlur = document.getElementById("drawaccumulatedwithblur").checked;
+    var drawAccumulatedHdrWithBlur = document.getElementById("drawaccumulatedhdrwithblur").checked;
 
-    if (drawAccumulatedLinear || drawAccumulatedHdr){
+    if (drawAccumulatedLinear || drawAccumulatedHdr || drawAccumulatedWithBlur || drawAccumulatedHdrWithBlur){
         //??
         //draw intermediate views - use below instead? then
         // draw from intermediate into accumulation (or should draw to final screen?)
@@ -361,7 +363,12 @@ function drawScene(frameTime){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
         gl.disable(gl.BLEND);   //back to default. 
 
-        if (drawAccumulatedHdr){
+
+        if (drawAccumulatedHdrWithBlur){
+            drawFullscreenQuad(shaderPrograms.fullscreenWithBlurHdr, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
+        } else if (drawAccumulatedWithBlur){
+            drawFullscreenQuad(shaderPrograms.fullscreenWithBlur, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
+        }else if (drawAccumulatedHdr){
             drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
         }else{
             drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, [accumulationView.texture], accumulationView.depthTexture );   //NOTE depth texture here is pointless!
