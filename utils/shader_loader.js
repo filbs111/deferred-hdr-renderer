@@ -119,8 +119,9 @@ function initShaders(shaderProgs){
 		albedo:["flat-vs", "albedo-fs"],
 		albedoAndNormals:["flat-vs", "albedo-and-normals-fs"],
 		worldPos:["flat-vs", "worldpos-fs"],
-  		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs"],			//actually this combines accumulated light with albedo.
-		fullscreenBasicCopyHdr:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["HDR"]],	//""
+  		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["APPLY_GAMMA_CORRECTION"]],
+		fullscreenBasicCopyHdr:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["HDR","APPLY_GAMMA_CORRECTION"]],
+		fullscreenBasicCopyNoGamma:["fullscreen-vs", "fullscreen-basic-copy-fs"],
 		fullscreenTextured:["fullscreen-vs", "fullscreen-fs"],
 		fullscreenTexturedHdr:["fullscreen-vs", "fullscreen-fs", [], ["HDR"]],
 		fullscreenDirectionalOnly:["fullscreen-vs", "fullscreen-directional-only-fs"],

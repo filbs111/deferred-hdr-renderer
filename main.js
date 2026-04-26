@@ -351,16 +351,21 @@ function drawScene(frameTime){
             gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[1].col);
         });
 
+        //multiply accumulated light by albedo
+        gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+        //gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
+        drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyNoGamma, [intermediateView.texture], intermediateView.depthTexture );    //NOTE depth texture here is pointless!
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
+        gl.disable(gl.BLEND);   //back to default. 
 
         if (drawAccumulatedHdr){
-            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, [accumulationView.texture, intermediateView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopyHdr, [accumulationView.texture], accumulationView.depthTexture );  //NOTE depth texture here is pointless!
         }else{
-            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, [accumulationView.texture, intermediateView.texture], accumulationView.depthTexture );   //NOTE depth texture here is pointless!
+            drawFullscreenQuad(shaderPrograms.fullscreenBasicCopy, [accumulationView.texture], accumulationView.depthTexture );   //NOTE depth texture here is pointless!
         }
-        gl.disable(gl.BLEND);   //back to default. 
         gl.enable(gl.DEPTH_TEST);
 
     } else if (drawViaIntermediate || drawViaIntermediateHdr){

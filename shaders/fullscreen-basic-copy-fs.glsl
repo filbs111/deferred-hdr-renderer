@@ -4,7 +4,6 @@ precision mediump float;
 in vec2 vTexCoords;
 
 uniform sampler2D uSampler;
-uniform sampler2D uSampler1;
 
 uniform mat4 uInvMat;
 
@@ -16,16 +15,16 @@ void main(void) {
 
     vec3 sampled = texture(uSampler, texCoordCorrected).xyz;
 
-    vec3 albedo = texture(uSampler1, texCoordCorrected).xyz;
-
-    vec3 multiplied = albedo*sampled;
-
 #ifdef HDR
-    vec3 hdrified = 1. - exp(-multiplied);
-    fragColor = vec4(pow(hdrified, vec3(0.455)),1.0);
+    vec3 preGamma = 1. - exp(-sampled);
 #else
-    fragColor = vec4(pow(multiplied, vec3(0.455)),1.0);
+    vec3 preGamma = sampled;
 #endif
 
+#ifdef APPLY_GAMMA_CORRECTION
+    fragColor = vec4(pow(preGamma, vec3(0.455)),1.0);
+#else
+    fragColor = vec4(preGamma,1.0);
+#endif
 
 }
