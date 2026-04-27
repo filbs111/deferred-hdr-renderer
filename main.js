@@ -5,7 +5,10 @@ var quadBuffers={};
 var lucyBuffers={};
 
 var cameraMat = mat4.identity();
-mat4.rotateY(cameraMat, 0.1);
+var cameraAngs = {
+    turn: 0.1,
+    elev:0
+};
 
 var mvMatrix = mat4.create();
 var mMatrix = mat4.create();
@@ -297,11 +300,29 @@ var camParams = {
     far:20000
 };
 
+function controlCamera(){
+    var amountToMove = new Array(2);
+    var fractionToKeep = 0.9;
+    for (var cc=0;cc<2;cc++){
+        amountToMove[cc]=mouseInfo.pendingMovement[cc]*(1-fractionToKeep);
+        mouseInfo.pendingMovement[cc]*=fractionToKeep;  //TODO if keep this, framerate independence.
+    }
+
+    cameraAngs.turn-=amountToMove[0];
+    cameraAngs.elev-=amountToMove[1];
+
+    mat4.identity(cameraMat);
+    mat4.rotateX(cameraMat, cameraAngs.elev);
+    mat4.rotateY(cameraMat, cameraAngs.turn);
+}
 
 
 function drawScene(frameTime){
 	requestAnimationFrame(drawScene);
     
+    //basic camera controls
+    controlCamera();
+
     intermediate_view_width = gl.viewportWidth;
     intermediate_view_height = gl.viewportHeight;
 
