@@ -5,6 +5,7 @@ var quadBuffers={};
 var lucyBuffers={};
 
 var cameraMat = mat4.identity();
+var cameraPos = [0,0,0];
 var cameraAngs = {
     turn: 0.1,
     elev:0
@@ -311,9 +312,24 @@ function controlCamera(){
     cameraAngs.turn-=amountToMove[0];
     cameraAngs.elev-=amountToMove[1];
 
+    var forwardBack = keyThing.keystate(87)-keyThing.keystate(83);	//vertical W,S = up, down
+    var leftRight = keyThing.keystate(65)-keyThing.keystate(68);    //lateral A,D
+
+
     mat4.identity(cameraMat);
+
+    //apply movement
+    //would like to move in frame of camera, but just get this working however...
+   
     mat4.rotateX(cameraMat, cameraAngs.elev);
     mat4.rotateY(cameraMat, cameraAngs.turn);
+
+    var cosSin = [Math.cos(cameraAngs.turn), Math.sin(cameraAngs.turn)];
+    var toMove = [leftRight*cosSin[0] - forwardBack*cosSin[1],0,forwardBack*cosSin[0] + leftRight*cosSin[1] ].map(xx=>0.1*xx);
+    for (var ii=0;ii<3;ii++){
+        cameraPos[ii]+=toMove[ii];
+    }
+    mat4.translate(cameraMat, cameraPos);
 }
 
 
