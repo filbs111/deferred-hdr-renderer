@@ -520,8 +520,10 @@ function drawWorldScene(activeProg, frameTime){
 
     //TODO use vertex colours on this obj
     if (lucyBuffers.isLoaded){
-        setupDrawMatrixForObjectAtPosition([150,0,-100]);
+        setupDrawMatrixForObjectAtPosition([15,0,-10]);
+        mat4.scale(mMatrix, [1,1,1].map(x=>0.1));
         mat4.rotateY(mMatrix, 1.2);
+        gl.uniform3fv(activeProg.uniforms.uFlatColor, [1,1,1].map(x=>0.25));
         drawObjectFromBuffers(lucyBuffers, activeProg);
     }
 
@@ -557,6 +559,10 @@ function drawFullscreenQuad(activeProg, colorTextures, depthTex, setThingsCallba
 
     if (activeProg.uniforms.uInvSize){
         gl.uniform2f(activeProg.uniforms.uInvSize, 1/intermediate_view_width, 1/intermediate_view_height);
+    }
+
+    if (activeProg.uniforms.uCameraWorldPos){
+        gl.uniform3fv(activeProg.uniforms.uCameraWorldPos, cameraPos.map(x=>-x));   // switched why? is world pos in shader -ve?
     }
 
     //NOTE exposure only applies to some rendering options

@@ -14,6 +14,7 @@ uniform vec3 uPointLight1Pos;
 uniform vec3 uPointLight1Color;
 uniform vec3 uPointLight2Pos;
 uniform vec3 uPointLight2Color;
+uniform vec3 uCameraWorldPos;
 
 out vec4 fragColor;
 
@@ -21,6 +22,16 @@ float calculatePointLighting(vec3 fromPointLight, vec3 normal){
     float dotProd = max( -dot(fromPointLight, normal) , 0.);
     float distSq = dot(fromPointLight, fromPointLight);
     return dotProd/distSq;
+}
+
+float calculateSpecularContribution(vec3 toLight, vec3 normal, vec3 toCamera){
+    vec3 normalizedToLight = normalize(toLight);
+    vec3 reflected = 2.*normal*dot(normalizedToLight,normal) - normalizedToLight;
+    float dotted = dot(normalize(toCamera), reflected);
+    float specPower = 10.;
+    float specularAmount = pow(dotted*.5+.501, specPower);
+    specularAmount*=4.; //multiply by something to boost highlights. TODO make semi-physical? should boost more for higher specular power
+    return specularAmount;
 }
 
 void main(void) {
@@ -39,7 +50,7 @@ void main(void) {
     vec4 worldPos = uInvMat * vec4(vTexCoords, -1. + 2.*depthVal, 1.);
     vec3 worldPosXYZ = worldPos.xyz/worldPos.w;
 
-    float light = 0.5+0.5*dot(normalize(normal), vec3(0.,1.,0.));
+    float light = 0.5+0.5*dot(normal, vec3(0.,1.,0.));
     vec3 vLight = vec3(light);
 
     float lightMultiplier = 1.;
@@ -48,10 +59,26 @@ void main(void) {
 
     regularLight = regularLight*.5;
     
-    vec3 pointLightContrib1 = uPointLight1Color* calculatePointLighting(worldPosXYZ - uPointLight1Pos, normal);
-    vec3 pointLightContrib2 = uPointLight2Color* calculatePointLighting(worldPosXYZ - uPointLight2Pos, normal);
+    vec3 toLight1 = uPointLight1Pos - worldPosXYZ;
+    vec3 toLight2 = uPointLight2Pos - worldPosXYZ;
 
-    vec3 totalLight = uExposure * albedo * (regularLight + pointLightContrib1 + pointLightContrib2);
+    vec3 pointLightContrib1 = uPointLight1Color* calculatePointLighting(-toLight1, normal);
+    vec3 pointLightContrib2 = uPointLight2Color* calculatePointLighting(-toLight2, normal);
+
+    vec3 totalLight = regularLight + pointLightContrib1 + pointLightContrib2;
+
+
+    //add specular component. optionally multirender to separate specular lighting acumulation buffer, 
+    // initially can just have fixed specular power and strength, apply to all objects.
+    // NOTE since currently applying this in regular lighting, albedo will aply, so things will look metallic but with diffuse too (maybe strange)
+    vec3 toCamera = uCameraWorldPos - worldPosXYZ;
+    
+    totalLight+= calculateSpecularContribution(vec3(0.,1.,0.), normal, toCamera);   //directional light specular
+    totalLight+= uPointLight1Color* calculateSpecularContribution(toLight1, normal, toCamera);
+    totalLight+= uPointLight2Color* calculateSpecularContribution(toLight2, normal, toCamera);
+
+
+    totalLight*= uExposure * albedo;
 
 #ifdef HDR
     vec3 hdrified = 1. - exp(-totalLight);
