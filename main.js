@@ -357,6 +357,7 @@ function drawScene(frameTime){
     var drawNormals = document.getElementById("drawnormals").checked;
     var drawAlbedo = document.getElementById("drawalbedo").checked;
     var drawWorldPos = document.getElementById("drawworldpos").checked;
+    var drawSchlick = document.getElementById("drawschlick").checked;
     var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
     var drawViaIntermediateHdr = document.getElementById("drawviaintermediatehdr").checked;
     var drawAccumulatedLinear = document.getElementById("drawaccumulatedlinear").checked;
@@ -388,15 +389,12 @@ function drawScene(frameTime){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    //TODO just draw disregarding depth
         drawFullscreenQuad(shaderPrograms.fullscreenDirectionalOnly, [intermediateView.texture1], intermediateView.depthTexture);
         
-        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, [intermediateView.texture1], intermediateView.depthTexture , activeProg => {
-            gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLights[0].pos);
-            gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[0].col)
-        });
-
-        drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, [intermediateView.texture1], intermediateView.depthTexture, activeProg => {
-            gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLights[1].pos);
-            gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLights[1].col);
-        });
+        for (var pointLight of pointLights){
+            drawFullscreenQuad(shaderPrograms.fullscreenPointOnly, [intermediateView.texture1], intermediateView.depthTexture , activeProg => {
+                gl.uniform3fv(activeProg.uniforms.uPointLightPos, pointLight.pos);
+                gl.uniform3fv(activeProg.uniforms.uPointLightColor, pointLight.col)
+            });
+        }
 
         //multiply accumulated light by albedo
         gl.blendFunc(gl.DST_COLOR, gl.ZERO);
@@ -423,7 +421,7 @@ function drawScene(frameTime){
         }
         gl.enable(gl.DEPTH_TEST);
 
-    } else if (drawViaIntermediate || drawViaIntermediateHdr){
+    } else if (drawViaIntermediate || drawViaIntermediateHdr || drawSchlick){
 
         drawIntermediateView(frameTime);
         
@@ -436,8 +434,10 @@ function drawScene(frameTime){
 
         if (drawViaIntermediateHdr){
             drawFullscreenQuad(shaderPrograms.fullscreenTexturedHdr, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights, exposure);
-        }else{
+        }else if (drawViaIntermediate){
             drawFullscreenQuad(shaderPrograms.fullscreenTextured, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, setLights, exposure);
+        }else{
+            drawFullscreenQuad(shaderPrograms.fullscreenSchlick, [intermediateView.texture, intermediateView.texture1], intermediateView.depthTexture, null, exposure);
         }
         //currently drawing reconstructed position relative to light
 

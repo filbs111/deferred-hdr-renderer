@@ -42,15 +42,35 @@ void main(void) {
     vec4 worldPos = uInvMat * vec4(vTexCoords, -1. + 2.*depthVal, 1.);
     vec3 worldPosXYZ = worldPos.xyz/worldPos.w;
     
-    vec3 toCamera = uCameraWorldPos - worldPosXYZ;
+    
+//add specular component. optionally multirender to separate specular lighting acumulation buffer, 
+    // initially can just have fixed specular power and strength, apply to all objects.
+    // NOTE since currently applying this in regular lighting, albedo will aply, so things will look metallic but with diffuse too (maybe strange)
+    vec3 toCamera = normalize(uCameraWorldPos - worldPosXYZ);
     vec3 reflected = 2.*normal*dot(normalizedToLight,normal) - normalizedToLight;
-    float dotted = dot(normalize(toCamera), reflected);
+    float dotted = dot(toCamera, reflected);
     float specPower = 10.;
     //vec3 specColor = vec3(1.);    //TODO pick appropriate strength given specular power (PBR does this automatically)
     float specularAmount = pow(dotted*.5+.501, specPower);
     specularAmount*=4.; //multiply by something to boost highlights. TODO make semi-physical? should boost more for higher specular power
 
-    totalLight += specularAmount;   //TODO multiply by directional light colour
+    vec3 uPointLightColor = vec3(1.);   //TODO pass in?
+
+    vec3 specularLight = specularAmount*uPointLightColor;
+
+
+//schlick's approximation. NOTE currently this is dependent on view direction relative to macro surface normal, so will be same for all lights!
+// if so might write to gbuffer overall glossiness including schlick
+// (though possibly should depend on view direction vs microfacet/direction to light)
+
+    float fresnelEffect = pow( 1. - dot(toCamera, normal) , 5.);
+    float specularFraction = mix( 0.3, 1., fresnelEffect);  //from some default specular reflection amount for viewing head on to 100% for glancing angle
+
+    totalLight = mix(totalLight, specularLight, specularFraction);
+
+
+
+
 
 
 #ifdef HDR

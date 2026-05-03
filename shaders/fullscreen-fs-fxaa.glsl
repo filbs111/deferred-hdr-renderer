@@ -8,6 +8,7 @@ uniform sampler2D uSampler;
 out vec4 fragColor;
 
 uniform vec2 uInvSize;
+uniform float uExposure;
 
 void main(void) {	
     float FXAA_SPAN_MAX = 8.0;
@@ -54,6 +55,8 @@ void main(void) {
     if (lumaResult2 < lumaMin || lumaResult2> lumaMax){
         totalLight = result1.xyz;
     }
+
+    totalLight*=uExposure;
 
 #ifdef HDR
     vec3 hdrified = 1. - exp(-totalLight);
