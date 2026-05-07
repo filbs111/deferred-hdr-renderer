@@ -8,7 +8,17 @@ in vec3 normalCopy;
 
 uniform vec3 uFlatColor;
 
+#ifdef ALBEDOTEXTURE
+in vec2 vTextureCoord;
+uniform sampler2D uSampler;
+#endif
 
 void main(void) {
+
+#ifdef ALBEDOTEXTURE
+    vec4 albedo = texture(uSampler, vTextureCoord);
+    fragColor = vec4(uFlatColor,1.0)*albedo;
+#else
     fragColor = vec4(uFlatColor,1.0);
+#endif
 }

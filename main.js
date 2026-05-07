@@ -146,7 +146,9 @@ function init(){
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 }
 
+var tiledStoneTex;
 function initTextures(){
+    tiledStoneTex = makeTexture("data/tiledstone-bl/tiledstone1_basecolor.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
 }
 
 
@@ -356,6 +358,7 @@ function drawScene(frameTime){
     var drawHdr = document.getElementById("drawforwardhdr").checked;
     var drawNormals = document.getElementById("drawnormals").checked;
     var drawAlbedo = document.getElementById("drawalbedo").checked;
+    var drawAlbedoTextured = document.getElementById("drawalbedotextured").checked;
     var drawWorldPos = document.getElementById("drawworldpos").checked;
     var drawSchlick = document.getElementById("drawschlick").checked;
     var drawViaIntermediate = document.getElementById("drawviaintermediate").checked;
@@ -452,8 +455,13 @@ function drawScene(frameTime){
             drawHdr ? shaderPrograms.flatHdr:
             drawNormals ? shaderPrograms.normals:
             drawAlbedo ? shaderPrograms.albedo:
+            drawAlbedoTextured ? shaderPrograms.albedoTextured:
             drawWorldPos ? shaderPrograms.worldPos:
             null;
+
+        if (shaderProg.uniforms.uSampler){
+       		bind2dTextureIfRequired(tiledStoneTex);
+        }
 
         if (shaderProg == null){
             console.log("oops!");
@@ -481,7 +489,7 @@ function drawIntermediateView(frameTime){
         gl.COLOR_ATTACHMENT1
     ]);
 
-    drawWorldScene(shaderPrograms.albedoAndNormals, frameTime, false);
+    drawWorldScene(shaderPrograms.albedoTexuredAndNormals, frameTime, false);
 }
 
 function drawWorldScene(activeProg, frameTime){
@@ -493,6 +501,10 @@ function drawWorldScene(activeProg, frameTime){
 
     if (activeProg.uniforms.uNormalScale){
         gl.uniform3fv(activeProg.uniforms.uNormalScale, [1,1,1]);
+    }
+
+    if (activeProg.uniforms.uSampler){
+        bind2dTextureIfRequired(tiledStoneTex);
     }
 
     var boxRotation = frameTime / 1000;

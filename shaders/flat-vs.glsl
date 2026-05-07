@@ -11,7 +11,16 @@ uniform vec3 uNormalScale;
 out vec3 worldPosXYZ;
 out vec3 normalCopy;
 
+#ifdef ALBEDOTEXTURE
+    in vec2 aTextureCoord;
+    out vec2 vTextureCoord;
+#endif
+
 void main(void) {
+
+#ifdef ALBEDOTEXTURE
+    vTextureCoord = aTextureCoord;
+#endif
 
     vec4 transformedPosition = uMMatrix * vec4(aVertexPosition, 1.0);
 
