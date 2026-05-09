@@ -14,6 +14,10 @@ uniform vec3 uFlatColor;
     uniform sampler2D uSampler;
 #endif
 
+#ifdef ROUGHNESSTEXTURE
+    uniform sampler2D uSamplerRoughness;
+#endif
+
 void main(void) {
 
 #ifdef ALBEDOTEXTURE
@@ -24,6 +28,12 @@ void main(void) {
 #endif
 
     vec3 shiftedNormals = vec3(.5) + .5*normalCopy;
-    
-    out_normals = vec4(shiftedNormals,1.0);
+
+#ifdef ROUGHNESSTEXTURE
+    float alpha = texture(uSamplerRoughness, vTextureCoord).r;
+#else
+    float alpha = 1.;
+#endif
+
+    out_normals = vec4(shiftedNormals, alpha);
 }

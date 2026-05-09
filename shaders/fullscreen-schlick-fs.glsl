@@ -35,7 +35,7 @@ void main(void) {
 
     float fresnelEffect = pow( 1. - dot(toCamera, normal) , 5.);
 
-    float specularFraction = mix( 0.3, 1., fresnelEffect);  //from some default specular reflection amount for viewing head on to 100% for glancing angle
+    float specularFraction = mix( 0.1, 1., fresnelEffect);  //from some default specular reflection amount for viewing head on to 100% for glancing angle
 
     fragColor = vec4(vec3(specularFraction),1.0);
 }

@@ -119,7 +119,7 @@ function initShaders(shaderProgs){
 		albedo:["flat-vs", "albedo-fs"],
 		albedoTextured:["flat-vs", "albedo-fs", ["ALBEDOTEXTURE"], ["ALBEDOTEXTURE"]],
 		//albedoAndNormals:["flat-vs", "albedo-and-normals-fs"],
-		albedoTexuredAndNormals:["flat-vs", "albedo-and-normals-fs", ["ALBEDOTEXTURE"], ["ALBEDOTEXTURE"]],
+		albedoTexuredAndNormals:["flat-vs", "albedo-and-normals-fs", ["ALBEDOTEXTURE"], ["ALBEDOTEXTURE", "ROUGHNESSTEXTURE"]],
 		worldPos:["flat-vs", "worldpos-fs"],
   		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["APPLY_GAMMA_CORRECTION"]],
 		fullscreenBasicCopyHdr:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["HDR","APPLY_GAMMA_CORRECTION"]],

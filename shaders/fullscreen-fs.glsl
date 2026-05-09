@@ -24,13 +24,16 @@ float calculatePointLighting(vec3 fromPointLight, vec3 normal){
     return dotProd/distSq;
 }
 
-float calculateSpecularContribution(vec3 toLight, vec3 normal, vec3 toCamera){
+float calculateSpecularContribution(vec3 toLight, vec3 normal, vec3 toCamera, float roughness){
     vec3 normalizedToLight = normalize(toLight);
     vec3 reflected = 2.*normal*dot(normalizedToLight,normal) - normalizedToLight;
-    float dotted = dot(normalize(toCamera), reflected);
-    float specPower = 10.;
+    float dotted = dot(toCamera, reflected);
+
+    float highlightSize = .05 + .8*roughness;   //guess something...
+    float specPower = 30./highlightSize;    //TODO what should this be
+
     float specularAmount = pow(dotted*.5+.501, specPower);
-    specularAmount*=4.; //multiply by something to boost highlights. TODO make semi-physical? should boost more for higher specular power
+    specularAmount*=.01*specPower*specPower; //multiply by something to boost highlights. TODO make semi-physical? should boost more for higher specular power
     return specularAmount;
 }
 
@@ -40,8 +43,9 @@ void main(void) {
 
     vec3 albedo = texture(uSampler, texCoordCorrected).xyz;
 
-    vec3 normalTex = texture(uSampler1, texCoordCorrected).xyz;
-    vec3 normal = normalize(normalTex*2. - 1.);
+    vec4 normalAndRoughness = texture(uSampler1, texCoordCorrected);
+    vec3 normal = normalize(normalAndRoughness.xyz*2. - 1.);
+    float roughness = normalAndRoughness.w;
 
     float depthVal = texture(uSamplerDepthmap, texCoordCorrected).r;
 
@@ -71,11 +75,21 @@ void main(void) {
     //add specular component. optionally multirender to separate specular lighting acumulation buffer, 
     // initially can just have fixed specular power and strength, apply to all objects.
     // NOTE since currently applying this in regular lighting, albedo will aply, so things will look metallic but with diffuse too (maybe strange)
-    vec3 toCamera = uCameraWorldPos - worldPosXYZ;
+    vec3 toCamera = normalize(uCameraWorldPos - worldPosXYZ);
     
-    totalLight+= calculateSpecularContribution(vec3(0.,1.,0.), normal, toCamera);   //directional light specular
-    totalLight+= uPointLight1Color* calculateSpecularContribution(toLight1, normal, toCamera);
-    totalLight+= uPointLight2Color* calculateSpecularContribution(toLight2, normal, toCamera);
+
+    vec3 specularLight= vec3(calculateSpecularContribution(vec3(0.,1.,0.), normal, toCamera, roughness));   //directional light specular
+    specularLight+= uPointLight1Color* calculateSpecularContribution(toLight1, normal, toCamera, roughness);
+    specularLight+= uPointLight2Color* calculateSpecularContribution(toLight2, normal, toCamera, roughness);
+
+
+//schlick's approximation. NOTE currently this is dependent on view direction relative to macro surface normal, so will be same for all lights!
+// if so might write to gbuffer overall glossiness including schlick
+// (though possibly should depend on view direction vs microfacet/direction to light)
+    float fresnelEffect = pow( 1. - dot(toCamera, normal) , 5.);
+    float specularFraction = mix( 0.1, 1., fresnelEffect);  //from some default specular reflection amount for viewing head on to 100% for glancing angle
+
+    totalLight = mix(totalLight, specularLight, specularFraction);
 
 
     totalLight*= uExposure * albedo;

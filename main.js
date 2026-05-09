@@ -147,8 +147,12 @@ function init(){
 }
 
 var tiledStoneTex;
+var tiledStoneRoughnessTex;
 function initTextures(){
     tiledStoneTex = makeTexture("data/tiledstone-bl/tiledstone1_basecolor.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
+    //tiledStoneRoughnessTex = makeTexture("data/tiledstone-bl/tiledstone1_roughness.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
+    tiledStoneRoughnessTex = makeTexture("data/vector-checker-pattern-black-white.webp",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);    
+    //tiledStoneRoughnessTex = makeTexture("data/tiledstone-bl/tiledstone1_roughness.png",gl.RED, gl.UNSIGNED_BYTE);    //??greyscale ? try this if above works...
 }
 
 
@@ -225,6 +229,10 @@ function prepBuffersForDrawing(bufferObj, shaderProg){
     if (bufferObj.vertexTextureCoordBuffer && shaderProg.uniforms.uSampler2){    
 		gl.activeTexture(gl.TEXTURE1);
 		gl.uniform1i(shaderProg.uniforms.uSampler2, 1);
+	}
+    if (shaderProg.uniforms.uSamplerRoughness){
+		gl.activeTexture(gl.TEXTURE0);
+		gl.uniform1i(shaderProg.uniforms.uSamplerRoughness, 2);
 	}
 
     if (shaderProg.uniforms.uPMatrix){
@@ -505,6 +513,10 @@ function drawWorldScene(activeProg, frameTime){
 
     if (activeProg.uniforms.uSampler){
         bind2dTextureIfRequired(tiledStoneTex);
+    }
+
+    if (activeProg.uniforms.uSamplerRoughness){
+        bind2dTextureIfRequired(tiledStoneRoughnessTex, gl.TEXTURE2);
     }
 
     var boxRotation = frameTime / 1000;

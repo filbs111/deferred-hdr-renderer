@@ -15,8 +15,9 @@ void main(void) {
 
     vec2 texCoordCorrected = vec2(0.5)+vec2(0.5)*vTexCoords;    //regular 2d texture has centre at 0.5
     
-    vec3 normalTex = texture(uSampler, texCoordCorrected).xyz;
-    vec3 normal = normalize(normalTex*2. - 1.);
+    vec4 normalAndRoughness = texture(uSampler, texCoordCorrected);
+    vec3 normal = normalize(normalAndRoughness.xyz*2. - 1.);
+    float roughness = normalAndRoughness.w;
 
     vec3 normalizedToLight = vec3(0.,1.,0.);
 
@@ -49,10 +50,13 @@ void main(void) {
     vec3 toCamera = normalize(uCameraWorldPos - worldPosXYZ);
     vec3 reflected = 2.*normal*dot(normalizedToLight,normal) - normalizedToLight;
     float dotted = dot(toCamera, reflected);
-    float specPower = 10.;
+
+    float highlightSize = .05 + .8*roughness;   //guess something...
+    float specPower = 30./highlightSize;    //TODO what should this be
+
     //vec3 specColor = vec3(1.);    //TODO pick appropriate strength given specular power (PBR does this automatically)
     float specularAmount = pow(dotted*.5+.501, specPower);
-    specularAmount*=4.; //multiply by something to boost highlights. TODO make semi-physical? should boost more for higher specular power
+    specularAmount*=.01*specPower*specPower; //multiply by something to boost highlights. TODO make semi-physical? should boost more for higher specular power
 
     vec3 uPointLightColor = vec3(1.);   //TODO pass in?
 
@@ -64,12 +68,9 @@ void main(void) {
 // (though possibly should depend on view direction vs microfacet/direction to light)
 
     float fresnelEffect = pow( 1. - dot(toCamera, normal) , 5.);
-    float specularFraction = mix( 0.3, 1., fresnelEffect);  //from some default specular reflection amount for viewing head on to 100% for glancing angle
+    float specularFraction = mix( 0.1, 1., fresnelEffect);  //from some default specular reflection amount for viewing head on to 100% for glancing angle
 
     totalLight = mix(totalLight, specularLight, specularFraction);
-
-
-
 
 
 
