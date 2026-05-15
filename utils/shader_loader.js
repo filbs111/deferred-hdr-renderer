@@ -113,14 +113,14 @@ function getLocationsForShadersUsingPromises(cb){
 function initShaders(shaderProgs){
 	var initShaderTimeStart = performance.now();
 	var shaderProgNoVariationsList = {
-		flat:["flat-vs", "flat-fs"],
-		flatHdr:["flat-vs", "flat-fs", [], ["HDR"]],
-		normals:["flat-vs", "normals-fs"],
+		flat:["flat-vs", "flat-fs",["WORLDPOS"]],
+		flatHdr:["flat-vs", "flat-fs", ["WORLDPOS"], ["HDR"]],
+		normals:["flat-vs", "normals-fs", ["NORMALMAPTEXTURE"], ["NORMALMAPTEXTURE"]],
 		albedo:["flat-vs", "albedo-fs"],
 		albedoTextured:["flat-vs", "albedo-fs", ["ALBEDOTEXTURE"], ["ALBEDOTEXTURE"]],
 		//albedoAndNormals:["flat-vs", "albedo-and-normals-fs"],
-		albedoTexuredAndNormals:["flat-vs", "albedo-and-normals-fs", ["ALBEDOTEXTURE"], ["ALBEDOTEXTURE", "ROUGHNESSTEXTURE"]],
-		worldPos:["flat-vs", "worldpos-fs"],
+		albedoTexuredAndNormals:["flat-vs", "albedo-and-normals-fs", ["ALBEDOTEXTURE","NORMALMAPTEXTURE"], ["ALBEDOTEXTURE", "ROUGHNESSTEXTURE","NORMALMAPTEXTURE"]],
+		worldPos:["flat-vs", "worldpos-fs",["WORLDPOS"]],
   		fullscreenBasicCopy:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["APPLY_GAMMA_CORRECTION"]],
 		fullscreenBasicCopyHdr:["fullscreen-vs", "fullscreen-basic-copy-fs", [], ["HDR","APPLY_GAMMA_CORRECTION"]],
 		fullscreenBasicCopyNoGamma:["fullscreen-vs", "fullscreen-basic-copy-fs"],

@@ -148,11 +148,20 @@ function init(){
 
 var tiledStoneTex;
 var tiledStoneRoughnessTex;
+var tiledStoneNormalTex;
 function initTextures(){
     tiledStoneTex = makeTexture("data/tiledstone-bl/tiledstone1_basecolor.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
     //tiledStoneRoughnessTex = makeTexture("data/tiledstone-bl/tiledstone1_roughness.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
     tiledStoneRoughnessTex = makeTexture("data/vector-checker-pattern-black-white.webp",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);    
     //tiledStoneRoughnessTex = makeTexture("data/tiledstone-bl/tiledstone1_roughness.png",gl.RED, gl.UNSIGNED_BYTE);    //??greyscale ? try this if above works...
+
+    //tiledStoneNormalTex = makeTexture("data/tiledstone-bl/tiledstone1_normal-ogl.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);   //TODO correct linear colours not sRGB ??
+    //tiledStoneNormalTex = makeTexture("data/TestNormalMap-300x300.webp",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);   //TODO correct linear colours not sRGB ??
+
+    tiledStoneNormalTex = makeTexture("data/normal-map-wood-panels-texture-normal-mapping-normal-map-wood-panels-texture-normal-mapping-245660694.webp",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);   //TODO correct linear colours not sRGB ??
+
+    
+
 }
 
 
@@ -216,6 +225,16 @@ function prepBuffersForDrawing(bufferObj, shaderProg){
         gl.vertexAttribPointer(shaderProg.attributes.aVertexNormal, bufferObj.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
     }
 
+    if (bufferObj.vertexTangentBuffer && shaderProg.attributes.aVertexTangent){
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexTangentBuffer);
+        gl.vertexAttribPointer(shaderProg.attributes.aVertexTangent, bufferObj.vertexTangentBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    }
+
+    if (bufferObj.vertexBinormalBuffer && shaderProg.attributes.aVertexBitangent){
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexBinormalBuffer);
+        gl.vertexAttribPointer(shaderProg.attributes.aVertexBitangent, bufferObj.vertexBinormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    }
+
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
 	
 	if (bufferObj.vertexTextureCoordBuffer && shaderProg.uniforms.uSampler){    
@@ -233,6 +252,11 @@ function prepBuffersForDrawing(bufferObj, shaderProg){
     if (shaderProg.uniforms.uSamplerRoughness){
 		gl.activeTexture(gl.TEXTURE0);
 		gl.uniform1i(shaderProg.uniforms.uSamplerRoughness, 2);
+	}
+
+    if (shaderProg.uniforms.uSamplerNormal){
+		gl.activeTexture(gl.TEXTURE3);
+		gl.uniform1i(shaderProg.uniforms.uSamplerNormal, 3);
 	}
 
     if (shaderProg.uniforms.uPMatrix){
@@ -519,7 +543,11 @@ function drawWorldScene(activeProg, frameTime){
         bind2dTextureIfRequired(tiledStoneRoughnessTex, gl.TEXTURE2);
     }
 
-    var boxRotation = frameTime / 1000;
+    if (activeProg.uniforms.uSamplerNormal){
+        bind2dTextureIfRequired(tiledStoneNormalTex, gl.TEXTURE3);
+    }
+
+    var boxRotation = frameTime / 20000;
 
     var rotMultiplier =0;
 
@@ -539,6 +567,8 @@ function drawWorldScene(activeProg, frameTime){
 
         setupDrawMatrixForObjectAtPosition(testCube.pos);
         mat4.rotateZ(mMatrix, rotMultiplier*boxRotation); //roll
+                mat4.rotateX(mMatrix, rotMultiplier*boxRotation);
+
         drawObjectFromBuffers(cubeBuffers, activeProg);
     }
 

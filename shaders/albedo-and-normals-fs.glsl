@@ -4,7 +4,6 @@ precision mediump float;
 layout (location = 0) out vec4 out_albedo;
 layout (location = 1) out vec4 out_normals;
 
-in vec3 worldPosXYZ; //unused
 in vec3 normalCopy;
 
 uniform vec3 uFlatColor;
@@ -18,6 +17,13 @@ uniform vec3 uFlatColor;
     uniform sampler2D uSamplerRoughness;
 #endif
 
+#ifdef NORMALMAPTEXTURE
+    uniform sampler2D uSamplerNormal;
+    in vec3 vTangent;
+    in vec3 vBitangent;
+#endif
+
+
 void main(void) {
 
 #ifdef ALBEDOTEXTURE
@@ -27,7 +33,18 @@ void main(void) {
     out_albedo = vec4(uFlatColor,1.0);
 #endif
 
-    vec3 shiftedNormals = vec3(.5) + .5*normalCopy;
+#ifdef NORMALMAPTEXTURE
+    vec3 nmapSample = texture(uSamplerNormal, vTextureCoord).xyz;
+    vec3 normalFromNMap = nmapSample - vec3(.5);
+
+    //multiply normal map normal by TBN to get
+    vec3 worldspaceNormal = normalFromNMap.x*vTangent + normalFromNMap.y*vBitangent + normalFromNMap.z*normalCopy;  //TODO use mat3 to multiply?
+#else
+    vec3 worldspaceNormal = normalCopy;
+#endif
+
+    vec3 shiftedNormals = vec3(.5) + .5*normalize(worldspaceNormal);
+
 
 #ifdef ROUGHNESSTEXTURE
     float alpha = texture(uSamplerRoughness, vTextureCoord).r;
