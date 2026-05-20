@@ -524,10 +524,7 @@ function drawIntermediateView(frameTime){
     drawWorldScene(shaderPrograms.albedoTexuredAndNormals, frameTime, false);
 }
 
-function drawWorldScene(activeProg, frameTime){
-
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+function setupShader(activeProg){
     gl.useProgram(activeProg);
     enableDisableAttributes(activeProg);
 
@@ -546,6 +543,15 @@ function drawWorldScene(activeProg, frameTime){
     if (activeProg.uniforms.uSamplerNormal){
         bind2dTextureIfRequired(tiledStoneNormalTex, gl.TEXTURE3);
     }
+}
+
+function drawWorldScene(activeProg, frameTime){
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    
+
+    setupShader(activeProg);
 
     var boxRotation = frameTime / 20000;
 
@@ -572,14 +578,7 @@ function drawWorldScene(activeProg, frameTime){
         drawObjectFromBuffers(cubeBuffers, activeProg);
     }
 
-    //TODO use vertex colours on this obj
-    if (lucyBuffers.isLoaded){
-        setupDrawMatrixForObjectAtPosition([15,0,-10]);
-        mat4.scale(mMatrix, [1,1,1].map(x=>0.1));
-        mat4.rotateY(mMatrix, 1.2);
-        gl.uniform3fv(activeProg.uniforms.uFlatColor, [1,1,1].map(x=>0.25));
-        drawObjectFromBuffers(lucyBuffers, activeProg);
-    }
+    
 
     if (activeProg.uniforms.uNormalScale){
         gl.uniform3fv(activeProg.uniforms.uNormalScale, [-1,-1,-1]);
@@ -592,6 +591,26 @@ function drawWorldScene(activeProg, frameTime){
         setupDrawMatrixForObjectAtPosition(light.pos);
         mat4.scale(mMatrix, [1,1,1].map(xx=>xx*0.02));
         drawObjectFromBuffers(cubeBuffers, activeProg);
+    }
+
+
+    //switch to other shader in special cases
+    if (activeProg == shaderPrograms.albedoTexuredAndNormals){
+        activeProg = shaderPrograms.albedoTexuredAndNormalsNoNormalmap;
+        setupShader(activeProg);
+    }
+    if (activeProg == shaderPrograms.normals){
+        activeProg = shaderPrograms.normalsNoNormalmap;
+        setupShader(activeProg);
+    }
+
+    //TODO use vertex colours on this obj
+    if (lucyBuffers.isLoaded){
+        setupDrawMatrixForObjectAtPosition([15,0,-10]);
+        mat4.scale(mMatrix, [1,1,1].map(x=>0.1));
+        mat4.rotateY(mMatrix, 1.2);
+        gl.uniform3fv(activeProg.uniforms.uFlatColor, [1,1,1].map(x=>0.25));
+        drawObjectFromBuffers(lucyBuffers, activeProg);
     }
 }
 
